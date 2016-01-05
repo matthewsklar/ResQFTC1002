@@ -1,0 +1,230 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+import com.qualcomm.robotcore.util.Range;
+
+/**
+ * @author FTC 1002
+ * @version 1.1
+ * @since 2015-9-28
+ */
+public class HaoLongTeleOp extends HaoLongHardware {
+    private int speedMultiplier;
+
+    private float powerHangingSpeed;
+    private float pincerHangingSpeed;
+    private float pivotHangingSpeed;
+
+    // Speed from joystick for hanging
+    private float hangMove;
+    private float hangPivot;
+    // Speed to apply when joystick is released
+    private float keepMove;
+    private float keepPivot;
+
+    private boolean speedReversePressed;
+    private boolean speedChangePressed;
+    private boolean hangBrakePressed;
+    private boolean hangPivotPressed;
+
+    private float[] wingDegrees = { 0, 90 };
+
+    @Override
+    public void init() {
+        super.init();
+
+        speedMultiplier = 1;
+
+        powerHangingSpeed = .7f;
+        pincerHangingSpeed = .3f;
+        pivotHangingSpeed = .25f;
+
+        speedReversePressed = false;
+        speedChangePressed = false;
+        hangBrakePressed = false;
+        hangPivotPressed = false;
+
+        // No retention on the claw yet
+        keepMove = 0.0f;
+        keepPivot = 0;
+
+        hangPivot = .75f; // TEST
+    }
+
+    /**
+     * Loop repeatedly called during TeleOp while the robot is running.
+     */
+    @Override
+    public void loop() {
+        // Scale values from analog sticks into range readable by motors
+        float leftY = (float)scaleInput(Range.clip(gamepad1.left_stick_y, -1, 1));
+        float rightY = (float)scaleInput(Range.clip(gamepad1.right_stick_y, -1, 1));
+        //float hangPivot = (float)scaleInput(Range.clip(gamepad2.left_stick_y, -.75, .75));
+        float hangMove = -(float)scaleInput(Range.clip(gamepad2.right_stick_y, -1, 1));
+        float hangPincher = -(float)scaleInput(Range.clip(gamepad2.left_stick_y, -.3, .3));
+
+        /*if (gamepad2.right_bumper) {
+            hangPivotPressed = true;
+            hangingPincer.setPower(-.3);
+            hangBrake.setPosition(.5);
+        } else if (hangPivotPressed) {
+            hangPivotPressed = false;
+            hangingPincer.setPower(0);
+        }
+
+        if (gamepad2.left_bumper) {
+            hangBrakePressed = true;
+            hangingPivot.setPower(-.3);
+            hangingPivot2.setPower(-.3);
+            pivotBrake.setPosition(.5);
+        } else if (hangBrakePressed) {
+            hangBrakePressed = false;
+            hangingPivot.setPower(0);
+            hangingPivot2.setPower(0);
+        }*/
+
+        if (gamepad2.start) keepMove = 0.0f;
+
+        // Control motors for hanging the robot
+        if (hangMove > 0.1) {
+            // NEED to back up and release the hangBreak;
+            //hangBrake.setPosition(0);
+            // Pinch strongly to reach for the bar
+            hangingPower.setPower(hangMove);
+            // Help to roll out the bar SLOWLY
+            //hangingPincer.setPower(0.3 * hangMove);
+
+            keepMove = 0.05f;
+        } else if (hangMove < -0.1) {
+            // NEED to set the hang break...
+            //hangBrake.setPosition(0);
+            // Pull with maximum motor power to lift robot
+            hangingPower.setPower(hangMove);
+            // Do not resist being pulled down much
+            //hangingPincer.setPower(0.2 * hangMove);
+
+            //keepMove = 0.05f;
+        } else {
+            // Use very low power to keep the hanging steady
+            hangingPower.setPower(0);
+
+            // No force on the hang break
+            //hangBrake.setPosition(0.5);
+        }
+
+        if (hangPincher > 0.1) hangingPincer.setPower(hangPincher);
+        else if (hangPincher < 0.1) hangingPincer.setPower(-hangPincher);
+        else hangingPincer.setPower(0);
+
+
+        if (gamepad2.right_bumper) {
+            if (!hangPivotPressed) {
+                hangPivotPressed = true;
+                if (hangPivot == .75f) hangPivot = 1;
+                else if (hangPivot == 1) hangPivot = .75f;
+            }
+        } else if (hangPivotPressed) hangPivotPressed = false;
+        // Control motors for pivoting the hanger
+        // Power is based on how far the joystick is moved
+        //if (hangPivot > 0.1) {
+        if (gamepad2.dpad_up) {
+            // Need to set the pivot break
+            //pivotBrake.setPosition(0);
+            hangingPivot.setPower(-hangPivot);
+            hangingPivot2.setPower(-hangPivot);
+        } //else if (hangPivot < -0.1) {
+        else if (gamepad2.dpad_down) {
+            // Need to back up and release the pivot break...
+            //pivotBrake.setPosition(0);
+            hangingPivot.setPower(hangPivot);
+            hangingPivot2.setPower(hangPivot);
+        } else {
+            // Stop the pivot motors
+            hangingPivot.setPower(0);
+            hangingPivot2.setPower(0);
+
+            // No force on the pivot break
+            //pivotBrake.setPosition(0.5);
+        }
+
+        // Control servos for controlling the wings
+        // *** X Y for left, A B for right
+        if (gamepad2.x) {
+            LWing.setPosition(0.0);
+        } else if (gamepad2.y) {
+            LWing.setPosition(1.0);
+        } else {
+            LWing.setPosition(0.5);
+        }
+        if (gamepad2.a) {
+            RWing.setPosition(1.0);
+        } else if (gamepad2.b) {
+            RWing.setPosition(0.0);
+        } else {
+            RWing.setPosition(0.5);
+        }
+
+        /*if (gamepad1.right_bumper) {
+            if (!speedChangePressed) {
+                if (Math.abs(speedMultiplier) == 1 / 2) speedMultiplier *= 2;
+                else speedMultiplier /= 2;
+
+                speedReversePressed = true;
+            }
+        } else if (speedChangePressed) speedReversePressed = false;*/
+
+        // Reverse the tank drive direction
+        if (gamepad1.start) {
+            if (!speedReversePressed) {
+                speedMultiplier = -speedMultiplier;
+                speedReversePressed = true;
+            }
+        } else if (speedReversePressed) speedReversePressed = false;
+
+        SetDrivePower(speedMultiplier * rightY, speedMultiplier * leftY);
+
+        telemetry.addData("Drive Right", speedMultiplier * rightY);
+        telemetry.addData("Drive Left", speedMultiplier * leftY);
+        //telemetry.addData("Hang Pivot", hangPivot);
+    }
+
+    @Override
+    public void stop() { }
+
+    /**
+     * This method scales the joystick input so for low joystick values, the
+     * scaled value is less than linear.  This is to make it easier to drive
+     * the robot more precisely at slower speeds.
+     */
+    double scaleInput(double dVal) {
+        double[] scaleArray = {0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
+                0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00};
+
+        // get the corresponding index for the scaleInput array.
+        int index = (int) (dVal * 16.0);
+        if (index < 0) index = -index;
+        else if (index > 16) index = 16;
+
+        double dScale = 0.0;
+        if (dVal < 0) dScale = -scaleArray[index];
+        else dScale = scaleArray[index];
+
+        return dScale;
+    }
+}
+
+
+        /*if (gamepad1.right_bumper) {
+            if (!hangBrakePressed) {
+                hangBrakePressed = true;
+                if (hangBrake.getPosition() == 0) hangBrake.setPosition(.3);
+                else if (hangBrake.getPosition() == .3) hangBrake.setPosition(0);
+            }
+        } else if (hangBrakePressed) hangBrakePressed = false;
+
+        if (gamepad1.left_bumper) {
+            if (!hangPivotBrakePressed) {
+                hangPivotBrakePressed = true;
+                if (pivotBrake.getPosition() == 0) pivotBrake.setPosition(.3);
+                else if (pivotBrake.getPosition() == .3) pivotBrake.setPosition(0);
+            }
+        } else if (hangPivotBrakePressed) hangPivotBrakePressed = false;*/
