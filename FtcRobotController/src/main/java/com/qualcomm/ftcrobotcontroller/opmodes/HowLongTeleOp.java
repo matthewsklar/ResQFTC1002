@@ -9,10 +9,23 @@ import com.qualcomm.robotcore.util.Range;
  */
 public class HowLongTeleOp extends HowLongHardware {
     /**
+     * Drive coefficient value
+     */
+    int driveCoefficient;
+
+    /**
+     * If the reverse button is down after being triggered once
+     */
+    boolean reverseButtonTriggered;
+
+    /**
      * Called when the robot initializes
      */
     @Override public void init() {
         super.init();
+
+        driveCoefficient = 1;
+        reverseButtonTriggered = false;
     }
 
     /**
@@ -24,13 +37,22 @@ public class HowLongTeleOp extends HowLongHardware {
         float leftDriveY = (float)scaleInput(Range.clip(gamepad1.left_stick_y, -1, 1));
 
         // If the hanging button is pressed
-        boolean hangingButton = gamepad1.a;
+        boolean hangingButtonForward = gamepad1.a; //Guess?
+        boolean hangingButtonBackward = gamepad1.b; //Guess?
+
+        // Reverse drive train direction toggle button
+        if (gamepad1.right_bumper) { //Guess
+            if (!reverseButtonTriggered) driveCoefficient *= -1;
+
+            reverseButtonTriggered = true;
+        } else reverseButtonTriggered = false;
 
         // Set the robot's drive motors' powers
-        SetDrivePower(rightDriveY, leftDriveY);
+        SetDrivePower(rightDriveY * driveCoefficient, leftDriveY * driveCoefficient);
 
         // Set the robot's hanging motors' power if the hanging button is pressed
-        SetHangingPower(hangingButton ? hangingPower : 0);
+        SetHangingPower(hangingButtonForward ? hangingPower : 0);
+        SetHangingPower(hangingButtonBackward ? -hangingPower : 0);
     }
 
     /**

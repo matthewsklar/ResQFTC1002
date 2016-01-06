@@ -46,7 +46,7 @@ public class HowLongHardware extends OpMode {
         RHM.setDirection(DcMotor.Direction.REVERSE);
 
         // Set the hanging power
-        hangingPower = .5f;
+        hangingPower = .5f;                         // Guess
     }
 
     /**
@@ -80,7 +80,7 @@ public class HowLongHardware extends OpMode {
     /**
      * Set the hang power of the robot
      *
-     * @param speed HRM and HLM power
+     * @param speed RHM and LHM power
      */
     public void SetHangingPower(double speed) {
         RHM.setPower(speed);
