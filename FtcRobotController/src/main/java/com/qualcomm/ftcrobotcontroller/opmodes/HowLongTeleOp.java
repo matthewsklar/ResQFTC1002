@@ -9,14 +9,19 @@ import com.qualcomm.robotcore.util.Range;
  */
 public class HowLongTeleOp extends HowLongHardware {
     /**
-     * Drive coefficient value
+     * Wing servo values
      */
-    int driveCoefficient;
+    private final double[] wingServoValues = { .3, .5 }; //Guess?
 
     /**
-     * If the reverse button is down after being triggered once
+     * Drive coefficient value
      */
-    boolean reverseButtonTriggered;
+    private double driveCoefficient;
+
+    /**
+     * Toggle buttons
+     */
+    private boolean reverseDriveButtonToggleOn, rightWingToggleOn, leftWingToggleOn;
 
     /**
      * Called when the robot initializes
@@ -24,8 +29,11 @@ public class HowLongTeleOp extends HowLongHardware {
     @Override public void init() {
         super.init();
 
-        driveCoefficient = 1;
-        reverseButtonTriggered = false;
+        driveCoefficient = 1.0;
+
+        reverseDriveButtonToggleOn = false;
+        rightWingToggleOn = false;
+        leftWingToggleOn = false;
     }
 
     /**
@@ -36,16 +44,23 @@ public class HowLongTeleOp extends HowLongHardware {
         float rightDriveY = (float)scaleInput(Range.clip(gamepad1.right_stick_y, -1, 1));
         float leftDriveY = (float)scaleInput(Range.clip(gamepad1.left_stick_y, -1, 1));
 
-        // If the hanging button is pressed
+        // Reverse drive button press status
+        boolean reverseDrive = gamepad1.right_bumper; //Guess?
+
+        // Hanging button press statuses
         boolean hangingButtonForward = gamepad1.a; //Guess?
         boolean hangingButtonBackward = gamepad1.b; //Guess?
 
-        // Reverse drive train direction toggle button
-        if (gamepad1.right_bumper) { //Guess
-            if (!reverseButtonTriggered) driveCoefficient *= -1;
+        // Wing button press statuses
+        boolean rightWingServo = gamepad2.a; //Guess?
+        boolean leftWingServo = gamepad2.b; //Guess?
 
-            reverseButtonTriggered = true;
-        } else reverseButtonTriggered = false;
+        // Reverse drive train direction toggle button
+        if (reverseDrive) { //Guess
+            if (!reverseDriveButtonToggleOn) driveCoefficient *= -1.0;
+
+            reverseDriveButtonToggleOn = true;
+        } else reverseDriveButtonToggleOn = false;
 
         // Set the robot's drive motors' powers
         SetDrivePower(rightDriveY * driveCoefficient, leftDriveY * driveCoefficient);
@@ -53,6 +68,21 @@ public class HowLongTeleOp extends HowLongHardware {
         // Set the robot's hanging motors' power if the hanging button is pressed
         SetHangingPower(hangingButtonForward ? hangingPower : 0);
         SetHangingPower(hangingButtonBackward ? -hangingPower : 0);
+
+        // Toggle wing servos
+        if (rightWingServo) {
+            if (!rightWingToggleOn) RWS.setPosition(wingServoValues[0]);
+            else RWS.setPosition(wingServoValues[1]);
+
+            rightWingToggleOn = true;
+        } else rightWingToggleOn = false;
+
+        if (leftWingServo) {
+            if (!leftWingToggleOn) LWS.setPosition(wingServoValues[0]);
+            else LWS.setPosition(wingServoValues[1]);
+
+            leftWingToggleOn = true;
+        } else leftWingToggleOn = false;
     }
 
     /**
@@ -65,7 +95,7 @@ public class HowLongTeleOp extends HowLongHardware {
      * scaled value is less than linear.  This is to make it easier to drive
      * the robot more precisely at slower speeds.
      */
-    double scaleInput(double dVal) {
+    private double scaleInput(double dVal) {
         double[] scaleArray = {0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
                 0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00};
 

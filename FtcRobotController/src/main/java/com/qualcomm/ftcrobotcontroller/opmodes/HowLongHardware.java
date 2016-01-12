@@ -2,6 +2,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /**
  * @author FTC 1002 (Matthew Sklar)
@@ -18,6 +19,11 @@ public class HowLongHardware extends OpMode {
      * Hanging Motors
      */
     public DcMotor RHM, LHM;
+
+    /**
+     * Wing Servos
+     */
+    public Servo RWS, LWS;
 
     /**
      * Hanging power
@@ -38,12 +44,19 @@ public class HowLongHardware extends OpMode {
         RHM = hardwareMap.dcMotor.get("RHM");
         LHM = hardwareMap.dcMotor.get("LHM");
 
+        // Initialize wing servos
+        RWS = hardwareMap.servo.get("RWS");
+        LWS = hardwareMap.servo.get("LWS");
+
         // Reverse wheel motors on right side to correct flipping
         FRW.setDirection(DcMotor.Direction.REVERSE);
         BRW.setDirection(DcMotor.Direction.REVERSE);
 
         // Reverse RHM to correct flipping
         RHM.setDirection(DcMotor.Direction.REVERSE);
+
+        // Reverse RWS to correct flipping
+        RWS.setDirection(Servo.Direction.REVERSE);
 
         // Set the hanging power
         hangingPower = .5f;                         // Guess
