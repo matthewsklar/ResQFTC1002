@@ -56,7 +56,7 @@ public class HowLongTeleOp extends HowLongHardware {
         boolean leftWingServo = gamepad2.b; //Guess?
 
         // Reverse drive train direction toggle button
-        if (reverseDrive) { //Guess
+        if (reverseDrive) { //Guess?
             if (!reverseDriveButtonToggleOn) driveCoefficient *= -1.0;
 
             reverseDriveButtonToggleOn = true;

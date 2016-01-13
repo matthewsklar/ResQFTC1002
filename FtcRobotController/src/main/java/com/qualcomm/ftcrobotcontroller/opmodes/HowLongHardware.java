@@ -1,6 +1,7 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -31,6 +32,11 @@ public class HowLongHardware extends OpMode {
     public double hangingPower;
 
     /**
+     * Color sensor
+     */
+    public ColorSensor colorSensor;
+
+    /**
      * Called when the robot initializes
      */
     @Override public void init() {
@@ -47,6 +53,9 @@ public class HowLongHardware extends OpMode {
         // Initialize wing servos
         RWS = hardwareMap.servo.get("RWS");
         LWS = hardwareMap.servo.get("LWS");
+
+        // Initialize color sensor
+        colorSensor = hardwareMap.colorSensor.get("CS");
 
         // Reverse wheel motors on right side to correct flipping
         FRW.setDirection(DcMotor.Direction.REVERSE);
