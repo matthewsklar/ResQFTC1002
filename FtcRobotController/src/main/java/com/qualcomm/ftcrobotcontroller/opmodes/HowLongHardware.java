@@ -3,6 +3,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -107,5 +108,76 @@ public class HowLongHardware extends OpMode {
     public void SetHangingPower(double speed) {
         RHM.setPower(speed);
         LHM.setPower(speed);
+    }
+
+    /**
+     * Turn on encoders
+     */
+    public void RunWithEncoders() {
+        FLW.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        FRW.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+    }
+
+    /**
+     * Turn off encoders
+     */
+    public void RunWithoutEncoders() {
+        if (FLW.getMode() == DcMotorController.RunMode.RESET_ENCODERS) {
+            FLW.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+        }
+
+        if (FRW.getMode() == DcMotorController.RunMode.RESET_ENCODERS) {
+            FRW.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+        }
+    }
+
+    /**
+     * Reset encoders
+     */
+    public void ResetEncoders() {
+        FLW.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        FRW.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+    }
+
+    /**
+     * Get the left encoder's value
+     *
+     * @return Left encoder value
+     */
+    public int LeftEncoderCount() {
+        return FLW.getCurrentPosition();
+    }
+
+    /**
+     * Get the right encoder's value
+     *
+     * @return Right encoder value
+     */
+    public int RightEncoderCount() {
+        return FRW.getCurrentPosition();
+    }
+
+    /**
+     * Get if the left encoder value has been reached
+     *
+     * @param count Encoder value target
+     * @return If the left encoder value has reached the target
+     */
+    public boolean LeftEncoderCountReached(int count) {
+        if (LeftEncoderCount() >= count) return true;
+
+        return false;
+    }
+
+    /**
+     * Get if the right encoder value has been reached
+     *
+     * @param count Encoder value target
+     * @return If the right encoder value has reached the target
+     */
+    public boolean RightEncoderCountReached(int count) {
+        if (RightEncoderCount() >= count) return true;
+
+        return false;
     }
 }

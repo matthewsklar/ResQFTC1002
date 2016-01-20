@@ -7,19 +7,40 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
  */
 public class HowLongAutonomous extends HowLongHardware {
     /**
+     * Autonomous states
+     */
+    private enum AutonomousState { SETUP }
+
+    /**
      * The RGB value of a color required to recognize it as the color.
      */
     private final int colorThreshold = 150; //Guess?
 
     /**
+     * The current state of autonomous
+     */
+    private AutonomousState autonomousState;
+
+    /**
      * Called when the robot initializes
      */
-    @Override public void init() { super.init(); }
+    @Override public void init() {
+        super.init();
+
+        autonomousState = AutonomousState.SETUP;
+    }
 
     /**
      * Loop repeatedly called during TeleOp while the robot is running.
      */
-    @Override public void loop() { }
+    @Override public void loop() {
+        switch (autonomousState) {
+            case SETUP:
+                break;
+            default:
+                break;
+        }
+    }
 
     /**
      * Called when the robot stops
