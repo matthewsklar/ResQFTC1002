@@ -4,14 +4,24 @@ import com.qualcomm.robotcore.util.Range;
 
 /**
  * @author FTC 1002 (Matthew Sklar)
- * @version 1.0
+ * @version 2.0
  * @since 2016-5-1
  */
 public class HowLongTeleOp extends HowLongHardware {
     /**
      * Wing servo values
      */
-    private final double[] wingServoValues = { .3, .5 }; //Guess?
+    private final double[] wingServoValues = { 0, .5, 1 };
+
+    /**
+     * Shield servo values
+     */
+    private final double[] shieldServoValues = { 0, .5, 1 };
+
+    /**
+     * Dunk servo values
+     */
+    private final double[] dunkServoValues = { .5, .7 };
 
     /**
      * Drive coefficient value
@@ -21,7 +31,19 @@ public class HowLongTeleOp extends HowLongHardware {
     /**
      * Toggle buttons
      */
-    private boolean reverseDriveButtonToggleOn, rightWingToggleOn, leftWingToggleOn;
+    private boolean reverseDriveButtonToggleOn, rightWingToggleOn, leftWingToggleOn, shieldToggleOn, dunkToggleOn, slowToggleOn;
+
+    private float shieldValue = 0;
+
+    private float sInterval = .1f;
+
+    /**
+     * 4-2 lift
+     * 3-1 right front wheel
+     * 3-2 left front wheel
+     */
+
+    boolean half = false;
 
     /**
      * Called when the robot initializes
@@ -29,11 +51,22 @@ public class HowLongTeleOp extends HowLongHardware {
     @Override public void init() {
         super.init();
 
-        driveCoefficient = 1.0;
+        FSS.setPosition(shieldServoValues[0]);
+        BSS.setPosition(shieldServoValues[2]);
+
+        RWS.setPosition(wingServoValues[0]);
+        LWS.setPosition(wingServoValues[0]);
+
+        Dunk.setPosition(dunkServoValues[0]);
+
+        driveCoefficient = -1.0;
 
         reverseDriveButtonToggleOn = false;
         rightWingToggleOn = false;
         leftWingToggleOn = false;
+        shieldToggleOn = false;
+        dunkToggleOn = false;
+        slowToggleOn = false;
     }
 
     /**
@@ -52,8 +85,22 @@ public class HowLongTeleOp extends HowLongHardware {
         boolean hangingButtonBackward = gamepad1.b; //Guess?
 
         // Wing button press statuses
-        boolean rightWingServo = gamepad2.a; //Guess?
-        boolean leftWingServo = gamepad2.b; //Guess?
+        boolean rightWingServo = gamepad2.b; //Guess?
+        boolean leftWingServo = gamepad2.a; //Guess?
+
+        // Shield button press status
+        boolean shieldUpServo = gamepad2.right_bumper; //Guess?
+        boolean shieldDownServo = gamepad2.left_bumper; //Guess?
+
+        // Dunk button press status
+        boolean dunkServo = gamepad2.left_bumper; //Guess?
+
+        // Slow the drive
+        boolean slowButton = gamepad1.left_bumper;
+
+        // Pivot button press statuses
+        boolean pivotUp = gamepad1.dpad_up; //Guess?
+        boolean pivotDown = gamepad1.dpad_down; //Guess?
 
         // Reverse drive train direction toggle button
         if (reverseDrive) { //Guess?
@@ -66,23 +113,82 @@ public class HowLongTeleOp extends HowLongHardware {
         SetDrivePower(rightDriveY * driveCoefficient, leftDriveY * driveCoefficient);
 
         // Set the robot's hanging motors' power if the hanging button is pressed
-        SetHangingPower(hangingButtonForward ? hangingPower : 0);
-        SetHangingPower(hangingButtonBackward ? -hangingPower : 0);
+        if (hangingButtonForward) SetHangingPower(hangingPower);
+        else if (hangingButtonBackward) SetHangingPower(-hangingPower);
+        else SetHangingPower(0);
 
         // Toggle wing servos
         if (rightWingServo) {
-            if (!rightWingToggleOn) RWS.setPosition(wingServoValues[0]);
-            else RWS.setPosition(wingServoValues[1]);
+            if (!rightWingToggleOn) {
+                if (RWS.getPosition() == wingServoValues[0]) RWS.setPosition(wingServoValues[1]);
+                else RWS.setPosition(wingServoValues[0]);
+            }
 
             rightWingToggleOn = true;
         } else rightWingToggleOn = false;
 
         if (leftWingServo) {
-            if (!leftWingToggleOn) LWS.setPosition(wingServoValues[0]);
-            else LWS.setPosition(wingServoValues[1]);
+            if (!leftWingToggleOn) {
+                if (LWS.getPosition() == wingServoValues[0]) LWS.setPosition(.4);
+                else LWS.setPosition(wingServoValues[0]);
+            }
 
             leftWingToggleOn = true;
         } else leftWingToggleOn = false;
+
+        // Toggle shield servos
+        if (shieldUpServo) {
+            if (!shieldToggleOn) {
+                if (shieldValue + sInterval <= 1) shieldValue += sInterval;
+                /*if (FSS.getPosition() == shieldServoValues[0]) {
+                    FSS.setPosition(shieldServoValues[1]);
+                    BSS.setPosition(shieldServoValues[1]);
+                } else {
+                    FSS.setPosition(shieldServoValues[0]);
+                    BSS.setPosition(shieldServoValues[2]);
+                }*/
+
+                shieldToggleOn = true;
+            } else if (!shieldDownServo) shieldToggleOn = false;
+        }
+
+        if (shieldDownServo) {
+            if (!shieldToggleOn) {
+                if (shieldValue - sInterval >= 0) shieldValue -= sInterval;
+
+                shieldToggleOn = true;
+            }
+        } else if (!shieldUpServo) shieldToggleOn = false;
+
+        FSS.setPosition(shieldValue);
+        BSS.setPosition(1 - shieldValue);
+
+        if (slowButton) {
+            if (!slowToggleOn) {
+                if (half) driveCoefficient *= 2;
+                else driveCoefficient /= 2;
+
+                half = !half;
+
+                slowToggleOn = true;
+            }
+        } else slowToggleOn = false;
+
+        // Toggle dunk servos
+        Dunk.setPosition(.5 +(gamepad2.right_trigger / 4) - gamepad2.left_trigger / 4);
+        /*
+        if (dunkServo) {
+            if (!dunkToggleOn) {
+                if (Dunk.getPosition() == dunkServoValues[1]) Dunk.setPosition(dunkServoValues[0]);
+                else Dunk.setPosition(dunkServoValues[1]);
+
+                dunkToggleOn = true;
+            }
+        } else dunkToggleOn = false;*/
+
+        if (pivotUp) Pivot.setPower(75);
+        else if (pivotDown) Pivot.setPower(-50);
+        else Pivot.setPower(0);
     }
 
     /**
