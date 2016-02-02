@@ -173,7 +173,7 @@ public class HowLongAutoColorSensor extends HowLongHardware {
             case MOVEUPRAMP:
                 RunWithEncoders();
 
-                if (Move (50,1000)) {
+                if (Move (50, 1000)) {
                     ResetEncoders();
                     autonomousState = AutonomousState.END;
                 }

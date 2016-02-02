@@ -186,8 +186,8 @@ public class HowLongTeleOp extends HowLongHardware {
             }
         } else dunkToggleOn = false;*/
 
-        if (pivotUp) Pivot.setPower(75);
-        else if (pivotDown) Pivot.setPower(-50);
+        if (pivotUp) Pivot.setPower(.3);
+        else if (pivotDown) Pivot.setPower(-.2);
         else Pivot.setPower(0);
     }
 
